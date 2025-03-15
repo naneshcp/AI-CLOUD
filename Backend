@@ -1,0 +1,131 @@
+from django.db import models
+from django.contrib.auth.models import User
+
+class LoginActivity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip_address = models.GenericIPAddressField()
+    location = models.CharField(max_length=255, blank=True, null=True)
+    device = models.CharField(max_length=255, blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_suspicious = models.BooleanField(default=False)
+
+    def _str_(self):
+        return f"{self.user.username} - {self.ip_address} - {self.timestamp}"
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
+from django.utils.timezone import now
+from .models import LoginActivity
+import requests
+
+@receiver(user_logged_in)
+def track_login(sender, request, user, **kwargs):
+    ip = get_client_ip(request)
+    location = get_geolocation(ip)
+
+    # Check for suspicious activity (new IP or device)
+    last_login = LoginActivity.objects.filter(user=user).order_by('-timestamp').first()
+    is_suspicious = False
+
+    if last_login and (last_login.ip_address != ip or last_login.device != request.META.get('HTTP_USER_AGENT')):
+        is_suspicious = True
+
+    LoginActivity.objects.create(
+        user=user,
+        ip_address=ip,
+        device=request.META.get('HTTP_USER_AGENT', 'Unknown'),
+        location=location,
+        timestamp=now(),
+        is_suspicious=is_suspicious
+    )
+
+def get_client_ip(request):
+    """Extract IP address from request"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+def get_geolocation(ip):
+    """Fetch geolocation based on IP address"""
+    try:
+        response = requests.get(f"https://ipinfo.io/{ip}/json")
+        data = response.json()
+        return f"{data.get('city', 'Unknown')}, {data.get('country', 'Unknown')}"
+    except:
+        return "Unknown"
+from django.apps import AppConfig
+
+class AccountsConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'accounts'
+
+    def ready(self):
+        import accounts.signals  # Import signals to activate them
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout, authenticate
+from django.http import HttpResponse
+from .models import LoginActivity
+
+def user_login(request):
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+
+            # Check if the latest login was suspicious
+            last_login = LoginActivity.objects.filter(user=user).order_by('-timestamp').first()
+            if last_login and last_login.is_suspicious:
+                return render(request, 'accounts/fake_page.html')  # Show fake page
+
+            return redirect('home')  # Redirect to real homepage
+
+    return render(request, 'accounts/login.html')
+
+def detect_malicious_activity(request):
+    """If user clicks anything suspicious on the fake page, terminate account."""
+    if request.user.is_authenticated:
+        request.user.delete()
+        return HttpResponse("Your account has been terminated due to suspicious activity.")
+    return redirect('login')
+"""
+URL configuration for project project.
+
+The urlpatterns list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.1/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+from accounts.views import user_login, detect_malicious_activity
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('login/', user_login, name='login'),
+    path('detect/', detect_malicious_activity, name='detect'),
+]
+from django.db import models
+from django.contrib.auth.models import User
+
+class LoginActivity(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    ip_address = models.GenericIPAddressField()
+    location = models.CharField(max_length=255, blank=True, null=True)
+    device = models.CharField(max_length=255, blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_suspicious = models.BooleanField(default=False)
+
+    def _str_(self):
+        return f"{self.user.username} - {self.ip_address} - {self.timestamp}"
