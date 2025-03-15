@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudPhantom - AI Visibility Shield</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            color: var(--dark);
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 220px;
+            background-color: var(--dark);
+            color: white;
+            padding: 1.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .nav-links {
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-bottom: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav-links li:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-links li.active {
+            background-color: var(--primary);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .dashboard-grid.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card.hidden {
+            display: none;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 1.125rem;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subtitle {
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        /* Veil Status Section */
+        .veil-status {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .veil-status.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .veil-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .veil-indicators {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .veil-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            width: 150px;
+            text-align: center;
+            transition: all 0.5s;
+        }
+
+        .veil-indicator.green {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--secondary);
+        }
+
+        .veil-indicator.yellow {
+            background-color: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+        }
+
+        .veil-indicator.red {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+        }
+
+        .veil-indicator.active {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.5);
+        }
+
+        .veil-status-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            margin-bottom: 0.5rem;
+        }
+
+        .green .veil-status-circle {
+            background-color: var(--secondary);
+        }
+
+        .yellow .veil-status-circle {
+            background-color: var(--warning);
+        }
+
+        .red .veil-status-circle {
+            background-color: var(--danger);
+        }
+
+        .veil-label {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .veil-description {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        /* Activity Log */
+        .activity-log {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .activity-log.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .log-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-items {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            animation: highlight 2s ease-out;
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .log-icon.green {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--secondary);
+        }
+
+        .log-icon.yellow {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .log-icon.red {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .log-icon.blue {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-message {
+            margin-bottom: 0.25rem;
+        }
+
+        .log-timestamp {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--gray);
+            color: var(--gray);
+        }
+
+        .btn-outline:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes highlight {
+            0% { background-color: #fff3e0; }
+            100% { background-color: transparent; }
+        }
+
+        .veil-indicator.red, .veil-indicator.yellow {
+            animation: pulse 1s ease-in-out;
+        }
+
+        .fade {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <div style="font-size: 24px; margin-right: 8px;">🚀</div>
+                CloudPhantom
+            </div>
+            <ul class="nav-links">
+                <li class="active" data-section="dashboard">Dashboard</li>
+                <li data-section="forecast">Phantom Forecast</li>
+                <li data-section="scale">Phantom Scale</li>
+                <li data-section="echo">Phantom Echo</li>
+                <li data-section="veil">Phantom Veil</li>
+                <li data-section="settings">Settings</li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div class="page-title" id="page-title">CloudPhantom Dashboard</div>
+                <div class="user-profile">
+                    <button class="btn btn-outline" id="simulation-controls">Simulation Controls</button>
+                    <div class="user-avatar">A</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid" id="dashboard-grid">
+                <!-- Dashboard Cards -->
+                <div class="card" id="card-active-threats">
+                    <div class="card-header">
+                        <div class="card-title">Active Threats</div>
+                        <div style="color: var(--danger); font-weight: bold;">LIVE</div>
+                    </div>
+                    <div class="card-value" id="active-threats">3</div>
+                    <div class="card-subtitle">2 hackers trapped in honeypots</div>
+                </div>
+                <div class="card" id="card-resources-protected">
+                    <div class="card-header">
+                        <div class="card-title">Resources Protected</div>
+                    </div>
+                    <div class="card-value" id="resources-protected">42</div>
+                    <div class="card-subtitle">9 currently cloaked</div>
+                </div>
+                <div class="card" id="card-suspicious-insiders">
+                    <div class="card-header">
+                        <div class="card-title">Suspicious Insiders</div>
+                    </div>
+                    <div class="card-value" id="suspicious-insiders">1</div>
+                    <div class="card-subtitle">Yellow veil active</div>
+                </div>
+
+                <!-- Forecast Cards -->
+                <div class="card hidden" id="card-threat-forecasts">
+                    <div class="card-header">
+                        <div class="card-title">Threat Forecasts</div>
+                    </div>
+                    <div class="card-value" id="forecast-count">0</div>
+                    <div class="card-subtitle">Next: N/A</div>
+                </div>
+                <div class="card hidden" id="card-prediction-accuracy">
+                    <div class="card-header">
+                        <div class="card-title">Prediction Accuracy</div>
+                    </div>
+                    <div class="card-value" id="prediction-accuracy">0%</div>
+                    <div class="card-subtitle">Based on last 100 forecasts</div>
+                </div>
+
+                <!-- Scale Cards -->
+                <div class="card hidden" id="card-scaled-resources">
+                    <div class="card-header">
+                        <div class="card-title">Scaled Resources</div>
+                    </div>
+                    <div class="card-value" id="scaled-resources">0</div>
+                    <div class="card-subtitle">Currently optimized</div>
+                </div>
+
+                <!-- Echo Cards -->
+                <div class="card hidden" id="card-trust-scores">
+                    <div class="card-header">
+                        <div class="card-title">Average Trust Score</div>
+                    </div>
+                    <div class="card-value" id="trust-scores">0%</div>
+                    <div class="card-subtitle">Across 50 users</div>
+                </div>
+
+                <!-- Veil Cards -->
+                <div class="card hidden" id="card-honeypot-traps">
+                    <div class="card-header">
+                        <div class="card-title">Honeypot Traps</div>
+                    </div>
+                    <div class="card-value" id="honeypot-traps">0</div>
+                    <div class="card-subtitle">Active traps</div>
+                </div>
+
+                <!-- Settings Cards -->
+                <div class="card hidden" id="card-settings-changes">
+                    <div class="card-header">
+                        <div class="card-title">Settings Changes</div>
+                    </div>
+                    <div class="card-value" id="settings-changes">0</div>
+                    <div class="card-subtitle">Last 24 hours</div>
+                </div>
+            </div>
+
+            <!-- Veil Status -->
+            <div class="veil-status" id="veil-status">
+                <div class="veil-title">Active Protection Veil Status</div>
+                <div class="veil-indicators" id="veil-indicators">
+                    <div class="veil-indicator green">
+                        <div class="veil-status-circle"></div>
+                        <div class="veil-label">Green Veil</div>
+                        <div class="veil-description" id="green-veil-desc">24 trusted users with full access</div>
+                    </div>
+                    <div class="veil-indicator yellow">
+                        <div class="veil-status-circle"></div>
+                        <div class="veil-label">Yellow Veil</div>
+                        <div class="veil-description" id="yellow-veil-desc">0 suspicious users with limited access</div>
+                    </div>
+                    <div class="veil-indicator red">
+                        <div class="veil-status-circle"></div>
+                        <div class="veil-label">Red Veil</div>
+                        <div class="veil-description" id="red-veil-desc">0 attackers in honeypot traps</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="activity-log" id="activity-log-container">
+                <div class="log-title">
+                    <div>Real-time Activity Log</div>
+                    <button class="btn btn-primary" id="view-logs">View All Logs</button>
+                </div>
+                <div class="log-items" id="activity-log"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+         // Simulate an AI prediction function (Fake Backend)
+    function fakeAIPrediction(failedLogins, apiRequests, dataDownloads) {
+        let riskScore = failedLogins * 2 + apiRequests * 0.5 + dataDownloads * 1.5;
+
+        if (riskScore > 50) return "High";
+        if (riskScore > 20) return "Medium";
+        return "Low";
+    }
+
+    // Sample log data with simulated AI predictions
+    const logData = [
+        {
+            type: 'veil',
+            message: 'Hacker detected: IP 182.54.19.2 trapped in honeypot',
+            time: '4:02 PM',
+            risk: fakeAIPrediction(5, 300, 10), // Fake AI risk score
+            icon: '🔒'
+        },
+        {
+            type: 'forecast',
+            message: 'Breach predicted in 5 minutes at API endpoint /users',
+            time: '4:01 PM',
+            risk: fakeAIPrediction(10, 500, 20), // Fake AI risk score
+            icon: '📡'
+        },
+        {
+            type: 'scale',
+            message: 'Server DB-04 reaching capacity (90%), hidden from public view',
+            time: '4:00 PM',
+            risk: fakeAIPrediction(2, 50, 5), // Fake AI risk score
+            icon: '📉'
+        },
+        {
+            type: 'echo',
+            message: 'User "bob@company.com" downloading unusual amount of data',
+            time: '3:58 PM',
+            risk: fakeAIPrediction(0, 20, 50), // Fake AI risk score
+            icon: '👤'
+        },
+        {
+            type: 'forecast',
+            message: 'Server crash predicted in 4 minutes for App-Server-12',
+            time: '3:55 PM',
+            risk: fakeAIPrediction(3, 80, 10), // Fake AI risk score
+            icon: '📡'
+        },
+    ];
+
+    // Function to populate the activity log
+    function populateActivityLog() {
+        const activityLog = document.getElementById('activity-log');
+        logData.forEach(log => {
+            const logItem = document.createElement('div');
+            logItem.className = 'log-item';
+
+            const logIcon = document.createElement('div');
+            logIcon.className = 'log-icon';
+            logIcon.innerText = log.icon;
+
+            const logContent = document.createElement('div');
+            logContent.className = 'log-content';
+
+            const logMessage = document.createElement('div');
+            logMessage.className = 'log-message';
+            logMessage.innerText = ${log.message} (Risk: ${log.risk});
+
+            const logTimestamp = document.createElement('div');
+            logTimestamp.className = 'log-timestamp';
+            logTimestamp.innerText = log.time;
+
+            logContent.appendChild(logMessage);
+            logContent.appendChild(logTimestamp);
+            logItem.appendChild(logIcon);
+            logItem.appendChild(logContent);
+            activityLog.appendChild(logItem);
+        });
+    }
+
+    // Call the function to populate the activity log on page load
+    window.onload = populateActivityLog;
+        // Mock log data (simulated real-time events)
+        const mockEvents = {
+            dashboard: [
+                { type: 'normal', message: 'System stable - Green Veil active', time: '4:00 PM', icon: '✅' },
+                { type: 'breach', message: 'Hacker detected: IP 182.54.19.2 - Veil to Red', time: '4:01 PM', icon: '⚠' },
+                { type: 'breach', message: 'Hacker trapped in honeypot - Phantom Strike', time: '4:02 PM', icon: '🔒' },
+                { type: 'overload', message: 'Server DB-04 at 90% - Cloaked', time: '4:03 PM', icon: '📉' },
+                { type: 'insider', message: 'User bob@company.com downloading 10GB - Restricted', time: '4:04 PM', icon: '👤' },
+                { type: 'normal', message: 'System stable - Green restored', time: '4:05 PM', icon: '✅' }
+            ],
+            forecast: [
+                { type: 'forecast', message: 'Server crash predicted in 4 minutes', time: '4:06 PM', icon: '📡' },
+                { type: 'forecast', message: 'Breach risk at API endpoint /users', time: '4:07 PM', icon: '⚠' },
+                { type: 'forecast', message: 'System stable for next hour', time: '4:08 PM', icon: '✅' }
+            ],
+            scale: [
+                { type: 'scale', message: 'Server S5 cloaked at 85% load', time: '4:09 PM', icon: '📉' },
+                { type: 'scale', message: 'Resource DB-01 optimized', time: '4:10 PM', icon: '🔧' },
+                { type: 'scale', message: 'Load balanced across 3 servers', time: '4:11 PM', icon: '📊' }
+            ],
+            echo: [
+                { type: 'insider', message: 'User alice@company.com flagged for 5GB download', time: '4:12 PM', icon: '👤' },
+                { type: 'insider', message: 'User trust score updated for bob', time: '4:13 PM', icon: '🔍' },
+                { type: 'normal', message: 'Insider activity normal', time: '4:14 PM', icon: '✅' }
+            ],
+            veil: [
+                { type: 'breach', message: 'Hacker IP 192.168.1.1 trapped', time: '4:15 PM', icon: '🔒' },
+                { type: 'veil', message: 'Red Veil deployed for attack', time: '4:16 PM', icon: '🚨' },
+                { type: 'normal', message: 'Green Veil restored', time: '4:17 PM', icon: '✅' }
+            ],
+            settings: [
+                { type: 'settings', message: 'Alert threshold set to 80%', time: '4:18 PM', icon: '⚙' },
+                { type: 'settings', message: 'Honeypot updated', time: '4:19 PM', icon: '🔧' },
+                { type: 'normal', message: 'Settings saved', time: '4:20 PM', icon: '✅' }
+            ]
+        };
+
+        // State for dynamic updates
+        let currentSection = 'dashboard';
+        let eventIndex = { dashboard: 0, forecast: 0, scale: 0, echo: 0, veil: 0, settings: 0 };
+        let stats = {
+            activeThreats: 3,
+            resourcesProtected: 42,
+            suspiciousInsiders: 1,
+            threatForecasts: 0,
+            predictionAccuracy: 0,
+            scaledResources: 0,
+            trustScores: 0,
+            honeypotTraps: 0,
+            settingsChanges: 0
+        };
+        let veilState = { green: 24, yellow: 0, red: 0 };
+        let intervalId;
+
+        // Function to update dashboard and veil based on section
+        function updateDashboard() {
+            const sectionEvents = mockEvents[currentSection];
+            if (eventIndex[currentSection] < sectionEvents.length) {
+                const event = sectionEvents[eventIndex[currentSection]];
+                const activityLog = document.getElementById('activity-log');
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+
+                const logIcon = document.createElement('div');
+                logIcon.className = log-icon ${event.type === 'normal' ? 'green' : event.type === 'breach' || event.type === 'veil' ? 'red' : event.type === 'overload' || event.type === 'scale' ? 'yellow' : event.type === 'insider' || event.type === 'echo' ? 'blue' : 'green'};
+                logIcon.innerText = event.icon;
+
+                const logContent = document.createElement('div');
+                logContent.className = 'log-content';
+
+                const logMessage = document.createElement('div');
+                logMessage.className = 'log-message';
+                logMessage.innerText = event.message;
+
+                const logTimestamp = document.createElement('div');
+                logTimestamp.className = 'log-timestamp';
+                logTimestamp.innerText = event.time;
+
+                logContent.appendChild(logMessage);
+                logContent.appendChild(logTimestamp);
+                logItem.appendChild(logIcon);
+                logItem.appendChild(logContent);
+                activityLog.appendChild(logItem);
+
+                // Update stats based on section and event
+                if (currentSection === 'dashboard') {
+                    if (event.type === 'breach') {
+                        stats.activeThreats++;
+                        document.getElementById('active-threats').textContent = stats.activeThreats;
+                        veilState.red++;
+                        document.getElementById('red-veil-desc').textContent = ${veilState.red} attackers in honeypot traps;
+                        document.getElementById('veil-indicators').querySelector('.red').classList.add('active');
+                    } else if (event.type === 'overload') {
+                        stats.resourcesProtected++;
+                        document.getElementById('resources-protected').textContent = stats.resourcesProtected;
+                        document.getElementById('resources-protected').nextElementSibling.textContent = ${stats.resourcesProtected - 33} currently cloaked;
+                    } else if (event.type === 'insider') {
+                        stats.suspiciousInsiders++;
+                        document.getElementById('suspicious-insiders').textContent = stats.suspiciousInsiders;
+                        veilState.yellow++;
+                        document.getElementById('yellow-veil-desc').textContent = ${veilState.yellow} suspicious user${veilState.yellow > 1 ? 's' : ''} with limited access;
+                        document.getElementById('veil-indicators').querySelector('.yellow').classList.add('active');
+                    } else if (event.type === 'normal' && eventIndex[currentSection] === sectionEvents.length - 1) {
+                        document.getElementById('veil-indicators').querySelector('.green').classList.add('active');
+                    }
+                } else if (currentSection === 'forecast') {
+                    stats.threatForecasts++;
+                    stats.predictionAccuracy = event.type === 'forecast' && event.message.includes('stable') ? 95 : 92;
+                    document.getElementById('forecast-count').textContent = stats.threatForecasts;
+                    document.getElementById('forecast-count').nextElementSibling.textContent = event.message.includes('predicted') ? 'Next: ' + event.message : event.message;
+                    document.getElementById('prediction-accuracy').textContent = ${stats.predictionAccuracy}%;
+                } else if (currentSection === 'scale') {
+                    stats.scaledResources++;
+                    document.getElementById('scaled-resources').textContent = stats.scaledResources;
+                } else if (currentSection === 'echo') {
+                    stats.trustScores = event.message.includes('flagged') ? 80 : 85;
+                    document.getElementById('trust-scores').textContent = ${stats.trustScores}%;
+                } else if (currentSection === 'veil') {
+                    if (event.type === 'breach' || event.type === 'veil') {
+                        stats.honeypotTraps++;
+                        veilState.red++;
+                        document.getElementById('honeypot-traps').textContent = stats.honeypotTraps;
+                        document.getElementById('red-veil-desc').textContent = ${veilState.red} attackers in honeypot traps;
+                        document.getElementById('veil-indicators').querySelector('.red').classList.add('active');
+                    } else {
+                        document.getElementById('veil-indicators').querySelector('.green').classList.add('active');
+                    }
+                } else if (currentSection === 'settings') {
+                    stats.settingsChanges++;
+                    document.getElementById('settings-changes').textContent = stats.settingsChanges;
+                }
+
+                eventIndex[currentSection]++;
+            }
+        }
+
+        // Start simulation
+        intervalId = setInterval(updateDashboard, 2000);
+
+        // Button event handlers
+        document.getElementById('simulation-controls').addEventListener('click', (e) => {
+            if (e.shiftKey && !intervalId) { // Trigger random event when paused with Shift
+                const sections = ['dashboard', 'forecast', 'scale', 'echo', 'veil', 'settings'];
+                const section = sections[Math.floor(Math.random() * sections.length)];
+                const randomEvent = {
+                    type: section === 'forecast' ? 'forecast' : section === 'scale' ? 'scale' : section === 'echo' ? 'insider' : section === 'veil' ? 'breach' : section === 'settings' ? 'settings' : ['breach', 'overload', 'insider', 'normal'][Math.floor(Math.random() * 4)],
+                    message: {
+                        breach: Hacker detected: IP ${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)} - Veil to Red,
+                        overload: Server S${Math.floor(Math.random() * 10)} at ${Math.floor(Math.random() * 100)}% - Cloaked,
+                        insider: User user${Math.floor(Math.random() * 100)} downloading ${Math.floor(Math.random() * 20)}GB - Restricted,
+                        normal: 'System stable - Green Veil active',
+                        forecast: Predicted breach risk at endpoint /data${Math.floor(Math.random() * 10)},
+                        scale: Server S${Math.floor(Math.random() * 10)} optimized,
+                        echo: User trust score updated for user${Math.floor(Math.random() * 100)},
+                        veil: Hacker IP ${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)} trapped,
+                        settings: Alert threshold updated to ${Math.floor(Math.random() * 100)}%
+                    }[randomEvent.type],
+                    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+                    icon: { breach: '⚠', overload: '📉', insider: '👤', normal: '✅', forecast: '📡', scale: '🔧', echo: '🔍', veil: '🔒', settings: '⚙' }[randomEvent.type]
+                };
+                mockEvents[section].push(randomEvent);
+                currentSection = section;
+                updateSectionContent();
+                updateDashboard();
+            } else if (!e.shiftKey) {
+                if (intervalId) {
+                    clearInterval(intervalId);
+                    intervalId = null;
+                    document.getElementById('simulation-controls').textContent = 'Resume Simulation';
+                } else {
+                    intervalId = setInterval(updateDashboard, 2000);
+                    document.getElementById('simulation-controls').textContent = 'Pause Simulation';
+                }
+            }
+        });
+
+        document.getElementById('view-logs').addEventListener('click', () => {
+            const activityLog = document.getElementById('activity-log');
+            activityLog.scrollTop = 0; // Scroll to top
+            setTimeout(() => {
+                activityLog.innerHTML = '';
+                eventIndex = { dashboard: 0, forecast: 0, scale: 0, echo: 0, veil: 0, settings: 0 };
+                stats = {
+                    activeThreats: 3,
+                    resourcesProtected: 42,
+                    suspiciousInsiders: 1,
+                    threatForecasts: 0,
+                    predictionAccuracy: 0,
+                    scaledResources: 0,
+                    trustScores: 0,
+                    honeypotTraps: 0,
+                    settingsChanges: 0
+                };
+                veilState = { green: 24, yellow: 0, red: 0 };
+                updateSectionContent();
+            }, 1000); // Clear after 1 second
+        });
+
+        // Sidebar navigation
+        function updateSectionContent() {
+            const sections = {
+                dashboard: () => {
+                    document.getElementById('page-title').textContent = 'CloudPhantom Dashboard';
+                    document.getElementById('dashboard-grid').classList.remove('hidden');
+                    document.getElementById('veil-status').classList.remove('hidden');
+                    document.getElementById('activity-log-container').classList.remove('hidden');
+                    // Show only Dashboard cards
+                    document.getElementById('card-active-threats').classList.remove('hidden');
+                    document.getElementById('card-resources-protected').classList.remove('hidden');
+                    document.getElementById('card-suspicious-insiders').classList.remove('hidden');
+                    document.getElementById('card-threat-forecasts').classList.add('hidden');
+                    document.getElementById('card-prediction-accuracy').classList.add('hidden');
+                    document.getElementById('card-scaled-resources').classList.add('hidden');
+                    document.getElementById('card-trust-scores').classList.add('hidden');
+                    document.getElementById('card-honeypot-traps').classList.add('hidden');
+                    document.getElementById('card-settings-changes').classList.add('hidden');
+                    // Update stats
+                    document.getElementById('active-threats').textContent = stats.activeThreats;
+                    document.getElementById('resources-protected').textContent = stats.resourcesProtected;
+                    document.getElementById('suspicious-insiders').textContent = stats.suspiciousInsiders;
+                    document.getElementById('red-veil-desc').textContent = ${veilState.red} attackers in honeypot traps;
+                    document.getElementById('yellow-veil-desc').textContent = ${veilState.yellow} suspicious user${veilState.yellow > 1 ? 's' : ''} with limited access;
+                    document.querySelectorAll('.veil-indicator').forEach(el => el.classList.remove('active'));
+                    if (veilState.yellow > 0) document.getElementById('veil-indicators').querySelector('.yellow').classList.add('active');
+                    else if (veilState.red > 0) document.getElementById('veil-indicators').querySelector('.red').classList.add('active');
+                    else document.getElementById('veil-indicators').querySelector('.green').classList.add('active');
+                },
+                forecast: () => {
+                    document.getElementById('page-title').textContent = 'CloudPhantom Forecast';
+                    document.getElementById('dashboard-grid').classList.remove('hidden');
+                    document.getElementById('veil-status').classList.add('hidden');
+                    document.getElementById('activity-log-container').classList.remove('hidden');
+                    // Show only Forecast cards
+                    document.getElementById('card-active-threats').classList.add('hidden');
+                    document.getElementById('card-resources-protected').classList.add('hidden');
+                    document.getElementById('card-suspicious-insiders').classList.add('hidden');
+                    document.getElementById('card-threat-forecasts').classList.remove('hidden');
+                    document.getElementById('card-prediction-accuracy').classList.remove('hidden');
+                    document.getElementById('card-scaled-resources').classList.add('hidden');
+                    document.getElementById('card-trust-scores').classList.add('hidden');
+                    document.getElementById('card-honeypot-traps').classList.add('hidden');
+                    document.getElementById('card-settings-changes').classList.add('hidden');
+                    // Update stats
+                    document.getElementById('forecast-count').textContent = stats.threatForecasts;
+                    document.getElementById('prediction-accuracy').textContent = ${stats.predictionAccuracy}%;
+                },
+                scale: () => {
+                    document.getElementById('page-title').textContent = 'CloudPhantom Scale';
+                    document.getElementById('dashboard-grid').classList.remove('hidden');
+                    document.getElementById('veil-status').classList.add('hidden');
+                    document.getElementById('activity-log-container').classList.remove('hidden');
+                    // Show only Scale cards
+                    document.getElementById('card-active-threats').classList.add('hidden');
+                    document.getElementById('card-resources-protected').classList.add('hidden');
+                    document.getElementById('card-suspicious-insiders').classList.add('hidden');
+                    document.getElementById('card-threat-forecasts').classList.add('hidden');
+                    document.getElementById('card-prediction-accuracy').classList.add('hidden');
+                    document.getElementById('card-scaled-resources').classList.remove('hidden');
+                    document.getElementById('card-trust-scores').classList.add('hidden');
+                    document.getElementById('card-honeypot-traps').classList.add('hidden');
+                    document.getElementById('card-settings-changes').classList.add('hidden');
+                    // Update stats
+                    document.getElementById('scaled-resources').textContent = stats.scaledResources;
+                },
+                echo: () => {
+                    document.getElementById('page-title').textContent = 'CloudPhantom Echo';
+                    document.getElementById('dashboard-grid').classList.remove('hidden');
+                    document.getElementById('veil-status').classList.add('hidden');
+                    document.getElementById('activity-log-container').classList.remove('hidden');
+                    // Show only Echo cards
+                    document.getElementById('card-active-threats').classList.add('hidden');
+                    document.getElementById('card-resources-protected').classList.add('hidden');
+                    document.getElementById('card-suspicious-insiders').classList.add('hidden');
+                    document.getElementById('card-threat-forecasts').classList.add('hidden');
+                    document.getElementById('card-prediction-accuracy').classList.add('hidden');
+                    document.getElementById('card-scaled-resources').classList.add('hidden');
+                    document.getElementById('card-trust-scores').classList.remove('hidden');
+                    document.getElementById('card-honeypot-traps').classList.add('hidden');
+                    document.getElementById('card-settings-changes').classList.add('hidden');
+                    // Update stats
+                    document.getElementById('trust-scores').textContent = ${stats.trustScores}%;
+                },
+                veil: () => {
+                    document.getElementById('page-title').textContent = 'CloudPhantom Veil';
+                    document.getElementById('dashboard-grid').classList.remove('hidden');
+                    document.getElementById('veil-status').classList.remove('hidden');
+                    document.getElementById('activity-log-container').classList.remove('hidden');
+                    // Show only Veil cards
+                    document.getElementById('card-active-threats').classList.add('hidden');
+                    document.getElementById('card-resources-protected').classList.add('hidden');
+                    document.getElementById('card-suspicious-insiders').classList.add('hidden');
+                    document.getElementById('card-threat-forecasts').classList.add('hidden');
+                    document.getElementById('card-prediction-accuracy').classList.add('hidden');
+                    document.getElementById('card-scaled-resources').classList.add('hidden');
+                    document.getElementById('card-trust-scores').classList.add('hidden');
+                    document.getElementById('card-honeypot-traps').classList.remove('hidden');
+                    document.getElementById('card-settings-changes').classList.add('hidden');
+                    // Update stats
+                    document.getElementById('honeypot-traps').textContent = stats.honeypotTraps;
+                    document.getElementById('red-veil-desc').textContent = ${veilState.red} attackers in honeypot traps;
+                },
+                settings: () => {
+                    document.getElementById('page-title').textContent = 'CloudPhantom Settings';
+                    document.getElementById('dashboard-grid').classList.remove('hidden');
+                    document.getElementById('veil-status').classList.add('hidden');
+                    document.getElementById('activity-log-container').classList.remove('hidden');
+                    // Show only Settings cards
+                    document.getElementById('card-active-threats').classList.add('hidden');
+                    document.getElementById('card-resources-protected').classList.add('hidden');
+                    document.getElementById('card-suspicious-insiders').classList.add('hidden');
+                    document.getElementById('card-threat-forecasts').classList.add('hidden');
+                    document.getElementById('card-prediction-accuracy').classList.add('hidden');
+                    document.getElementById('card-scaled-resources').classList.add('hidden');
+                    document.getElementById('card-trust-scores').classList.add('hidden');
+                    document.getElementById('card-honeypot-traps').classList.add('hidden');
+                    document.getElementById('card-settings-changes').classList.remove('hidden');
+                    // Update stats
+                    document.getElementById('settings-changes').textContent = stats.settingsChanges;
+                }
+            };
+
+            document.querySelectorAll('.dashboard-grid, .veil-status, .activity-log').forEach(el => el.classList.add('fade'));
+            setTimeout(() => {
+                sections[currentSection]();
+                document.querySelectorAll('.dashboard-grid, .veil-status, .activity-log').forEach(el => el.classList.remove('fade'));
+            }, 500); // Match animation duration
+        }
+
+        document.querySelectorAll('.nav-links li').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                currentSection = item.getAttribute('data-section');
+                eventIndex[currentSection] = 0; // Reset event index for new section
+                document.getElementById('activity-log').innerHTML = ''; // Clear log for new section
+                item.classList.add('active');
+                document.querySelectorAll('.nav-links li').forEach(li => {
+                    if (li !== item) li.classList.remove('active');
+                });
+                updateSectionContent();
+            });
+        });
+
+        // Initial setup
+        updateSectionContent();
+    </script>
+</body>
+</html>
